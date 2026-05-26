@@ -1,5 +1,7 @@
-void state_initialization_setup() { Serial.println("Setup: Inicializando..."); }
+void state_initialization_setup() { 
+  Serial.println("[STATE:INITIALIZATION]: Start"); 
+}
+
 state_t state_initialization_logic() { 
-  // Se sensores ok, avança:
   return STATE_SEARCHING; 
 }
