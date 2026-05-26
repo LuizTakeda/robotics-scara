@@ -1,3 +1,6 @@
+#include <Wire.h>
+#include <VL53L0X.h>
+
 enum state_t {
   STATE_NONE = 0,
   STATE_INITIALIZATION,
@@ -43,9 +46,14 @@ static const logic_func_t s_logic_functions[] = {
 
 void setup() {
   Serial.begin(115200);
+
+  distance_sensor_setup();
+
 }
 
 void loop() {
+  distance_sensor_logic();
+  
   if (s_current_state <= STATE_NONE || s_current_state > STATE_DELIVERING_OBJECT) {
     return; 
   }
