@@ -1,90 +1,72 @@
-// #include <Wire.h>
-// #include <VL53L0X.h>
+enum state_t {
+  STATE_NONE = 0,
+  STATE_INITIALIZATION,
+  STATE_SEARCHING,          
+  STATE_GO_TO_TARGET,     
+  STATE_OBJECT_EVALUATION,
+  STATE_GRABBING_OBJECT,   
+  STATE_DELIVERING_OBJECT  
+}; 
 
-// VL53L0X sensor;
+typedef void (*setup_func_t)(void);
+typedef state_t (*logic_func_t)(void);
 
-// void setup() {
-//   // Inicializa a comunicação serial para o monitor
-//   Serial.begin(115200);
+static state_t s_current_state = STATE_INITIALIZATION;
+static bool s_setup_executed = false;
 
-//   if (!sensor.init()) {
-//     Serial.println("Falha ao detectar ou inicializar o sensor VL53L0X!");
-//     while (1) {} // Trava o código aqui se houver erro
-//   }
+void state_initialization_setup();    state_t state_initialization_logic();
+void state_searching_setup();         state_t state_searching_logic();
+void state_go_to_target_setup();      state_t state_go_to_target_logic();
+void state_object_evaluation_setup(); state_t state_object_evaluation_logic();
+void state_grabbing_object_setup();   state_t state_grabbing_object_logic();
+void state_delivering_object_setup(); state_t state_delivering_object_logic();
 
-//   // Define que o sensor fará leituras contínuas em alta velocidade/precisão padrão
-//   sensor.startContinuous();
-//   Serial.println("Sensor VL53L0X inicializado com sucesso!");
-// }
+static const setup_func_t s_setup_functions[] = {
+  NULL, 
+  state_initialization_setup,
+  state_searching_setup,
+  state_go_to_target_setup, 
+  state_object_evaluation_setup, 
+  state_grabbing_object_setup, 
+  state_delivering_object_setup
+};
 
-// void loop() {
-//   // Leitura da distância em milímetros (mm)
-//   uint16_t distancia = sensor.readRangeContinuousMillimeters();
-
-//   // Verifica se houve timeout na leitura
-//   if (sensor.timeoutOccurred()) { 
-//     Serial.println(" TIMEOUT - Falha na leitura"); 
-//   } else {
-//     Serial.print("Distancia: ");
-//     Serial.print(distancia);
-//     Serial.println(" mm");
-//   }
-
-//   delay(100); // Aguarda 100ms antes da próxima leitura
-// }
-//   // Inicializa o barramento I2C nos pinos padrão do ESP32 (SDA=21, SCL=22)
-//   Wire.begin(21, 22);
-
-//   // Inicializa o sensor
-//   sensor.setTimeout(500);
-
-// #include <Wire.h>
-// #include <Adafruit_PWMServoDriver.h>
-
-// // Inicializa a biblioteca do PCA9685 usando o endereço padrão 0x40
-// Adafruit_PWMServoDriver pca = Adafruit_PWMServoDriver(0x40);
-
-// // Ajustes de pulso para Servos de 180 graus (podem variar dependendo da marca do servo)
-// #define SERVOMIN  150 // Comprimento mínimo do pulso (fração de 4096) -> perto de 0°
-// #define SERVOMAX  600 // Comprimento máximo do pulso (fração de 4096) -> perto de 180°
-
-// // Canal onde o servo está conectado no PCA9685 (0 a 15)
-// uint8_t canalServo = 13; 
-
-// void setup() {
-//   Serial.begin(115200);
-//   Serial.println("Iniciando teste do PCA9685...");
-
-//   // Inicializa o barramento I2C nos pinos corretos da D1 R32
-//   Wire.begin(15, 14);
-
-//   pca.begin();
-  
-//   // Define a frequência de atualização do PWM para 50Hz (padrão para servos)
-//   pca.setOscillatorFrequency(27000000);
-//   pca.setPWMFreq(50); 
-
-//   delay(10);
-// }
-
-// void loop() {
-//   Serial.println("Movendo para 0 graus");
-//   pca.setPWM(canalServo, 0, SERVOMIN);
-//   delay(1000);
-
-//   Serial.println("Movendo para 90 graus");
-//   // Calcula o meio termo entre o mínimo e o máximo
-//   int pulsoMeio = (SERVOMIN + SERVOMAX) / 2;
-//   pca.setPWM(canalServo, 0, pulsoMeio);
-//   delay(1000);
-
-//   Serial.println("Movendo para 180 graus");
-//   pca.setPWM(canalServo, 0, SERVOMAX);
-//   delay(1000);
-// }
+static const logic_func_t s_logic_functions[] = {
+  NULL, 
+  state_initialization_logic,
+  state_searching_logic,
+  state_go_to_target_logic, 
+  state_object_evaluation_logic, 
+  state_grabbing_object_logic, 
+  state_delivering_object_logic
+};
 
 void setup() {
+  Serial.begin(115200);
 }
 
 void loop() {
+  if (s_current_state <= STATE_NONE || s_current_state > STATE_DELIVERING_OBJECT) {
+    return; 
+  }
+
+  // --- EXECUÇÃO DO SETUP DO ESTADO ATUAL ---
+  if (!s_setup_executed) {
+    if (s_setup_functions[s_current_state] != NULL) {
+      s_setup_functions[s_current_state](); 
+    }
+    s_setup_executed = true;
+  }
+
+  // --- EXECUÇÃO DA LÓGICA DO ESTADO ATUAL ---
+  state_t next_state = STATE_NONE;
+  if (s_logic_functions[s_current_state] != NULL) {
+    next_state = s_logic_functions[s_current_state](); 
+  }
+
+  // --- GERENCIAMENTO DE TRANSIÇÃO ---
+  if (next_state != STATE_NONE) {
+    s_current_state = next_state;
+    s_setup_executed = false;
+  }
 }
