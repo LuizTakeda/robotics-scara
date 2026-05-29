@@ -5,7 +5,7 @@
 #define FILTER_ALPHA 0.3 // Configuração do Filtro EMA
 #define NOT_SEEING_DISTANCE 250 
 #define READ_RATE_MS 60
-#define PRINT_RATE_MS 60
+#define PRINT_RATE_MS 300
 
 //**************************************************
 // Globals
