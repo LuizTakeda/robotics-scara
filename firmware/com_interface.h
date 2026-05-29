@@ -7,6 +7,7 @@ enum com_interface_id_t {
 
 struct com_interface_go_to_payload_t {
   float x, y;
+  bool grab;
 };
 
 struct com_interface_get_t {

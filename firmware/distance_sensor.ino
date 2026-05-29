@@ -6,6 +6,7 @@
 #define NOT_SEEING_DISTANCE 250 
 #define READ_RATE_MS 60
 #define PRINT_RATE_MS 300
+#define PRINT_DISTANCE false
 
 //**************************************************
 // Globals
@@ -67,7 +68,7 @@ void distance_sensor_logic(){
     s_current_distance = (uint16_t)s_filtered_distance;
   }
 
-  if (millis() - s_print_last_millis >= PRINT_RATE_MS) {
+  if (PRINT_DISTANCE && millis() - s_print_last_millis >= PRINT_RATE_MS) {
     s_print_last_millis = millis();
     Serial.printf("[DISTANCE_SENSOR]: %dmm\n", s_current_distance);
   }
