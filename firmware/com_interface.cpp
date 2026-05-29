@@ -35,6 +35,7 @@ void com_interface_logic() {
     input_string.trim();
 
     if (check_go_to_cmd(input_string)) {
+      Serial.println("[COM_INTERFACE]: Received go to command");
       return;
     }
   }
